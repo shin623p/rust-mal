@@ -2,6 +2,7 @@ extern crate regex;
 
 use self::regex::Regex;
 use types::MalType;
+use std::rc::Rc;
 
 struct Reader {
     tokens: Vec<String>,
@@ -29,7 +30,6 @@ pub fn read_str(str: String) -> Option<MalType> {
 fn tokenizer(str: String) -> Vec<String> {
     let mut tokens: Vec<String> = Vec::new();
     let re =
-        //Regex::new(r##"[\s,]*(~@|[\[\]{}()'`~^@]|"(?:\\.|[^\\"])*"|;.*|[^\s\[\]{}('"`,;)]*)"##)
         Regex::new(r##"[\s,]*(~@|[\[\]{}()'`~^@]|"(?:\\.|[^\\"])*"|;.*|[^\s\[\]{}('"`,;)]*)"##)
             .unwrap();
     for caps in re.captures_iter(str.as_str()) {
@@ -46,12 +46,12 @@ fn read_form(rd: &mut Reader) -> Option<MalType> {
 }
 
 fn read_list(rd: &mut Reader) -> Option<MalType> {
-    let mut list: Vec<MalType> = Vec::new();
+    let mut list: Vec<Rc<MalType>> = Vec::new();
     let _ = rd.next();
     loop {
         match &rd.peek().unwrap()[..] {
-            ")" => return Some(MalType::MalList(list)),
-            _ => list.push(read_form(rd).unwrap()),
+            ")" => return Some(MalType::List(list)),
+            _ => list.push(Rc::new(read_form(rd).unwrap())),
         }
     }
 }
